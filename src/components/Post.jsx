@@ -3,10 +3,11 @@ import TestProfImg from "../assets/sasuke github.jpeg";
 import TestPostImg from "../assets/cat.png";
 import { AiFillDelete } from "react-icons/ai";
 import { BiComment, BiSolidLike } from "react-icons/bi";
+import { Anchorme } from "react-anchorme";
 
-const Post = () => {
+const Post = (props) => {
   return (
-    <div className="bg-base-200 p-4 mb-6 rounded-lg shadow-lg sm:w-[450px] md:w-[600px] lg:w-[800px] mx-auto">
+    <div className={`bg-base-200 p-${props.padding} mb-${props.marginBottom} rounded-lg ${props.shadow} sm:w-[450px] md:w-[600px] lg:w-[800px] mx-auto`}>
       <div className="flex justify-between">
         <div className="flex gap-4 items-center">
           <div className="avatar">
@@ -24,8 +25,10 @@ const Post = () => {
         </div>
       </div>
       <div className="my-4 text-lg">
-        Malaysia's Syazrul Idrus produced the best bowling figures in Men's T20I
-        history 🙌 More ➡️ https://www.icc-cricket.com/news/3603747
+        <Anchorme target="_blank" className="text-error">
+          Malaysia's Syazrul Idrus produced the best bowling figures in Men's
+          T20I history 🙌 More ➡️ https://www.icc-cricket.com/news/3603747
+        </Anchorme>
       </div>
       <div>
         <img src={TestPostImg} alt="" />

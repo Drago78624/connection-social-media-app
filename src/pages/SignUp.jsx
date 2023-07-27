@@ -1,6 +1,88 @@
 import React from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useState } from "react";
+import { auth, db, googleAuthProvider, storage } from "../firebase-config";
+import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { addDoc, collection } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { v4 } from "uuid";
 
 const SignUp = () => {
+  const [userExists, setUserExists] = useState(false);
+  const usersnamesCollectionRef = collection(db, "userdata");
+  const [loading, setLoading] = useState(false);
+
+  const formSchema = yup.object().shape({
+    username: yup.string().required("Please enter a username"),
+    email: yup.string().email().required("Please enter an email"),
+    password: yup.string().min(8).required(),
+    confirmPassword: yup
+      .string()
+      .oneOf([yup.ref("password"), null], "Passwords do not match")
+      .required("Please confirm your password"),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(formSchema),
+  });
+
+  const onSignUp = async (data) => {
+    setLoading(true);
+    console.log(data);
+    try {
+      const res = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      // image upload logic
+      const imageRef = ref(storage, `profiles/${data.image[0].name + v4()}`);
+      const imageRes = await uploadBytes(imageRef, data.image[0]);
+      const url = await getDownloadURL(imageRef);
+      console.log("signed up successfully");
+      if (res.user.uid) {
+        await addDoc(usersnamesCollectionRef, {
+          id: res.user.uid,
+          username: data.username,
+          profUrl: url,
+        });
+        console.log("username added");
+      }
+      setLoading(false);
+    } catch (err) {
+      const errorCode = err.code;
+      if (errorCode === "auth/email-already-in-use") {
+        console.log("User already exists with this email");
+        setUserExists(true);
+      } else {
+        console.log(err);
+      }
+    }
+  };
+
+  const onSignUpWithGoogle = async () => {
+    try {
+      const res = await signInWithPopup(auth, googleAuthProvider);
+      console.log(res.user.uid);
+      if (res.user.uid) {
+        await addDoc(usersnamesCollectionRef, {
+          id: res.user.uid,
+          username: res.user.displayName,
+        });
+        console.log("username added");
+      }
+      console.log("signed up with google successfully");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className="container mx-auto flex-col flex min-h-screen justify-center items-center">
       <div className="mb-12">
@@ -11,49 +93,93 @@ const SignUp = () => {
           Your Social Hub Awaits!
         </p>
       </div>
-      <form className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto">
+      <form
+        onSubmit={handleSubmit(onSignUp)}
+        className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto"
+      >
         <div className="form-control w-full max-w-2xl mb-3">
           <input
             type="text"
             placeholder="Username"
             className="input input-bordered w-full shadow-lg"
+            {...register("username")}
           />
+          <p className="text-error mt-1">
+            {errors.username && errors.username.message}
+          </p>
         </div>
         <div className="form-control w-full max-w-2xl mb-3">
           <input
             type="text"
             placeholder="Email Address"
             className="input input-bordered w-full shadow-lg"
+            {...register("email")}
           />
+          <p className="text-error mt-1">
+            {(errors.email && errors.email.message) ||
+              (userExists && "User already exists")}
+          </p>
         </div>
         <div className="form-control w-full max-w-2xl mb-3">
           <input
             type="password"
             placeholder="Password"
             className="input input-bordered w-full shadow-lg"
+            {...register("password")}
           />
+          <p className="text-error mt-1">
+            {errors.password &&
+              errors.password.message.charAt(0).toUpperCase() +
+                errors.password.message.slice(1)}
+          </p>
         </div>
         <div className="form-control w-full max-w-2xl mb-3">
           <input
             type="password"
             placeholder="Confirm Password"
             className="input input-bordered w-full shadow-lg"
+            {...register("confirmPassword")}
+          />
+          <p className="text-error mt-1">
+            {errors.confirmPassword && errors.confirmPassword?.message}
+          </p>
+        </div>
+        <div className="form-control w-full max-w-2xl mb-3">
+          <label htmlFor="image" className="mb-2">
+            Choose Profile Picture
+          </label>
+          <input
+            type="file"
+            id="image"
+            placeholder="dfd"
+            className="file-input file-input-bordered w-full"
+            {...register("image")}
           />
         </div>
         <div className="form-control w-full max-w-2xl mb-3">
-          <input
-            type="submit"
-            value="sign up"
-            className="w-full btn btn-secondary shadow-lg"
-          />
+          {loading ? (
+            <button className="w-full btn btn-secondary shadow-lg">
+              <span className="loading loading-spinner"></span>
+              Signing up
+            </button>
+          ) : (
+            <input
+              type="submit"
+              value="sign up"
+              className="w-full btn btn-secondary shadow-lg"
+            />
+          )}
         </div>
         <div className="divider">OR</div>
-        <div>
-          <button className="btn btn-error w-full shadow-lg">
-            Sign in With Google
-          </button>
-        </div>
       </form>
+      <div className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto">
+        <button
+          onClick={onSignUpWithGoogle}
+          className="btn btn-error w-full shadow-lg"
+        >
+          Sign in With Google
+        </button>
+      </div>
     </div>
   );
 };
