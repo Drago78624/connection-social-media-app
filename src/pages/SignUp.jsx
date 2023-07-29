@@ -5,13 +5,20 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { auth, db, googleAuthProvider, storage } from "../firebase-config";
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { addDoc, collection } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  where,
+  query,
+  getDoc,
+  getDocs,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
 
 const SignUp = () => {
   const [userExists, setUserExists] = useState(false);
-  const usersnamesCollectionRef = collection(db, "userdata");
+  const userdataCollectionRef = collection(db, "userdata");
   const [loading, setLoading] = useState(false);
 
   const formSchema = yup.object().shape({
@@ -34,7 +41,6 @@ const SignUp = () => {
 
   const onSignUp = async (data) => {
     setLoading(true);
-    console.log(data);
     try {
       const res = await createUserWithEmailAndPassword(
         auth,
@@ -45,21 +51,20 @@ const SignUp = () => {
       const imageRef = ref(storage, `profiles/${data.image[0].name + v4()}`);
       const imageRes = await uploadBytes(imageRef, data.image[0]);
       const url = await getDownloadURL(imageRef);
-      console.log("signed up successfully");
-      if (res.user.uid) {
-        await addDoc(usersnamesCollectionRef, {
-          id: res.user.uid,
-          username: data.username,
-          profUrl: url,
-        });
-        console.log("username added");
-      }
+      await addDoc(userdataCollectionRef, {
+        id: res.user.uid,
+        username: data.username,
+        profUrl: url,
+      });
       setLoading(false);
     } catch (err) {
+      setLoading(false);
       const errorCode = err.code;
       if (errorCode === "auth/email-already-in-use") {
-        console.log("User already exists with this email");
         setUserExists(true);
+        setTimeout(() => {
+          setUserExists(false);
+        }, 3000);
       } else {
         console.log(err);
       }
@@ -69,15 +74,17 @@ const SignUp = () => {
   const onSignUpWithGoogle = async () => {
     try {
       const res = await signInWithPopup(auth, googleAuthProvider);
-      console.log(res.user.uid);
-      if (res.user.uid) {
-        await addDoc(usersnamesCollectionRef, {
+      const q = query(userdataCollectionRef, where("id", "==", res.user.uid));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        await addDoc(userdataCollectionRef, {
           id: res.user.uid,
           username: res.user.displayName,
+          profUrl: res.user.photoURL,
         });
-        console.log("username added");
+      } else {
+        return;
       }
-      console.log("signed up with google successfully");
     } catch (err) {
       console.log(err);
     }
