@@ -1,8 +1,13 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, redirect, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate()
+  const removeAuthUid = () => {
+    localStorage.removeItem("uid")
+    navigate("/login")
+}
   return (
     <nav className="navbar bg-base-100 py-3 shadow-lg fixed">
       <div className="container mx-auto flex justify-between">
@@ -23,9 +28,9 @@ const Navbar = () => {
             </Link>
           )}
           {location.pathname == "/browse" && (
-            <Link to="/logout" className="btn btn-neutral">
+            <button onClick={removeAuthUid} className="btn btn-neutral">
               Logout
-            </Link>
+            </button>
           )}
         </div>
       </div>

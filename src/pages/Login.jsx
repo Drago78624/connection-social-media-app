@@ -5,10 +5,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleAuthProvider } from "../firebase-config";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [wrongPass, setWrongPass] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [userNotFound, setUserNotFound] = useState(false);
+  const navigate = useNavigate()
 
   const formSchema = yup.object().shape({
     email: yup.string().email().required("Please enter an email"),
@@ -24,26 +27,35 @@ const Login = () => {
   });
 
   const onLogin = async (data) => {
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      console.log("logged in successfully")
     } catch (err) {
       const errorCode = err.code;
       if (errorCode === "auth/wrong-password") {
         console.log("wrong password");
         setWrongPass(true);
+        setTimeout(() => {
+          setWrongPass(false);
+        }, 3000);
       } else if (errorCode === "auth/user-not-found") {
         console.log("user does not exist");
         setUserNotFound(true);
+        setTimeout(() => {
+          setUserNotFound(false);
+        }, 3000);
       } else {
         console.log(err);
       }
     }
+    setLoading(false);
   };
 
   const onLogInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleAuthProvider);
+      const res = await signInWithPopup(auth, googleAuthProvider);
+      localStorage.setItem("uid", JSON.stringify(res.user.uid))
+      navigate("/browse")
     } catch (err) {
       console.log(err);
     }
@@ -57,7 +69,10 @@ const Login = () => {
         </h1>
         <p className="text-center text-md md:text-xl">Log in and Reconnect!</p>
       </div>
-      <form onSubmit={handleSubmit(onLogin)} className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto">
+      <form
+        onSubmit={handleSubmit(onLogin)}
+        className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto"
+      >
         <div className="form-control w-full max-w-2xl mb-3">
           <input
             type="text"
@@ -85,19 +100,29 @@ const Login = () => {
           </p>
         </div>
         <div className="form-control w-full max-w-2xl mb-3">
-          <input
-            type="submit"
-            value="login"
-            className="w-full btn btn-secondary shadow-lg"
-          />
+          {loading ? (
+            <button className="w-full btn btn-secondary shadow-lg">
+              <span className="loading loading-spinner"></span>
+              Logging in
+            </button>
+          ) : (
+            <button className="w-full btn btn-secondary shadow-lg">
+              Login
+            </button>
+          )}
         </div>
         <div className="divider">OR</div>
       </form>
-        <div className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto">
-          <button onClick={onLogInWithGoogle} className="btn btn-error w-full shadow-lg">
+      <div className="sm:w-[300px] md:w-[350px] lg:w-[400px] mx-auto">
+        <div className="form-control w-full max-w-2xl ">
+          <button
+            onClick={onLogInWithGoogle}
+            className="btn btn-error w-full shadow-lg"
+          >
             Sign in With Google
           </button>
         </div>
+      </div>
     </div>
   );
 };

@@ -5,19 +5,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { auth, db, googleAuthProvider, storage } from "../firebase-config";
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import {
-  addDoc,
-  collection,
-  where,
-  query,
-  getDoc,
-  getDocs,
-} from "firebase/firestore";
+import { addDoc, collection, where, query, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
 
 const SignUp = () => {
   const [userExists, setUserExists] = useState(false);
+  const [usernameTaken, setUsernameTaken] = useState(false);
   const userdataCollectionRef = collection(db, "userdata");
   const [loading, setLoading] = useState(false);
 
@@ -42,23 +36,33 @@ const SignUp = () => {
   const onSignUp = async (data) => {
     setLoading(true);
     try {
-      const res = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
+      const q = query(
+        userdataCollectionRef,
+        where("username", "==", data.username)
       );
-      // image upload logic
-      const imageRef = ref(storage, `profiles/${data.image[0].name + v4()}`);
-      const imageRes = await uploadBytes(imageRef, data.image[0]);
-      const url = await getDownloadURL(imageRef);
-      await addDoc(userdataCollectionRef, {
-        id: res.user.uid,
-        username: data.username,
-        profUrl: url,
-      });
-      setLoading(false);
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        const res = await createUserWithEmailAndPassword(
+          auth,
+          data.email,
+          data.password
+        );
+        // userdata saving
+        const imageRef = ref(storage, `profiles/${data.image[0].name + v4()}`);
+        await uploadBytes(imageRef, data.image[0]);
+        const url = await getDownloadURL(imageRef);
+        await addDoc(userdataCollectionRef, {
+          id: res.user.uid,
+          username: data.username,
+          profUrl: url,
+        });
+      } else {
+        setUsernameTaken(true);
+        setTimeout(() => {
+          setUsernameTaken(false);
+        }, 3000);
+      }
     } catch (err) {
-      setLoading(false);
       const errorCode = err.code;
       if (errorCode === "auth/email-already-in-use") {
         setUserExists(true);
@@ -69,6 +73,7 @@ const SignUp = () => {
         console.log(err);
       }
     }
+    setLoading(false);
   };
 
   const onSignUpWithGoogle = async () => {
@@ -112,7 +117,8 @@ const SignUp = () => {
             {...register("username")}
           />
           <p className="text-error mt-1">
-            {errors.username && errors.username.message}
+            {(errors.username && errors.username.message) ||
+              (usernameTaken && "Username already taken")}
           </p>
         </div>
         <div className="form-control w-full max-w-2xl mb-3">
@@ -170,11 +176,9 @@ const SignUp = () => {
               Signing up
             </button>
           ) : (
-            <input
-              type="submit"
-              value="sign up"
-              className="w-full btn btn-secondary shadow-lg"
-            />
+            <button className="w-full btn btn-secondary shadow-lg">
+              Sign up
+            </button>
           )}
         </div>
         <div className="divider">OR</div>
