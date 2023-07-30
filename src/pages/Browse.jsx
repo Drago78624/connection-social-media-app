@@ -8,7 +8,7 @@ import { db } from "../firebase-config";
 import moment from "moment";
 
 const Browse = () => {
-  const [posts, setPosts] = useState([])
+  const [posts, setPosts] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
   const userdataCollectionRef = collection(db, "userdata");
 
@@ -28,22 +28,35 @@ const Browse = () => {
     const getPostsData = async () => {
       const querySnapshot = await getDocs(collection(db, "posts"));
       const posts = querySnapshot.docs.map((doc) => doc.data());
-      console.log(posts)
-      setPosts(posts)
+      setPosts(posts);
     };
-    getPostsData()
+    getPostsData();
     getUserData();
   }, []);
+
   return (
     <div className="container mx-auto min-h-screen pt-24 p-4">
       <h1 className="text-center text-3xl md:text-5xl mb-6 font-semibold ">
         Your Feed
       </h1>
       <CreatePost profUrl={userInfo?.profUrl} username={userInfo?.username} />
-      {posts && posts.map(post => {
-        return <Post marginBottom={6} shadow="shadow-lg" padding={4} postText={post.post_text} postImg={post.post_image} likes={post.likes} timestamp={moment(posts.created_at).fromNow()} />
-      })}
-      
+      {posts &&
+        posts.map((post) => {
+          const timeInMiliseconds = post.created_at.seconds * 1000
+          const timeAgo = moment(timeInMiliseconds).fromNow();
+          return (
+            <Post
+              marginBottom={6}
+              shadow="shadow-lg"
+              padding={4}
+              postText={post.post_text}
+              postImg={post.post_image}
+              likes={post.likes}
+              timestamp={timeAgo}
+            />
+          );
+        })}
+
       {createPortal(<Modal />, document.body)}
     </div>
   );

@@ -1,5 +1,4 @@
 import React from "react";
-import TestProfImg from "../assets/sasuke github.jpeg";
 
 const CreatePost = (props) => {
   return (

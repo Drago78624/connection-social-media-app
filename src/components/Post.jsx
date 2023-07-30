@@ -1,10 +1,8 @@
 import React from "react";
 import TestProfImg from "../assets/sasuke github.jpeg";
-import TestPostImg from "../assets/cat.png";
 import { AiFillDelete } from "react-icons/ai";
 import { BiComment, BiSolidLike } from "react-icons/bi";
 import { Anchorme } from "react-anchorme";
-import moment from "moment";
 
 const Post = (props) => {
   
