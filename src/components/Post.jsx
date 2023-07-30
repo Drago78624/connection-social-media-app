@@ -4,10 +4,14 @@ import TestPostImg from "../assets/cat.png";
 import { AiFillDelete } from "react-icons/ai";
 import { BiComment, BiSolidLike } from "react-icons/bi";
 import { Anchorme } from "react-anchorme";
+import moment from "moment";
 
 const Post = (props) => {
+  
   return (
-    <div className={`bg-base-200 p-${props.padding} mb-${props.marginBottom} rounded-lg ${props.shadow} sm:w-[450px] md:w-[600px] lg:w-[800px] mx-auto`}>
+    <div
+      className={`bg-base-200 p-${props.padding} mb-${props.marginBottom} rounded-lg ${props.shadow} sm:w-[450px] md:w-[600px] lg:w-[800px] mx-auto`}
+    >
       <div className="flex justify-between">
         <div className="flex gap-4 items-center">
           <div className="avatar">
@@ -17,7 +21,7 @@ const Post = (props) => {
           </div>
           <div>
             <h2 className="text-lg font-bold">Muhammad Maaz Ahmed</h2>
-            <p>1h ago</p>
+            <p>{props.timestamp}</p>
           </div>
         </div>
         <div>
@@ -26,16 +30,19 @@ const Post = (props) => {
       </div>
       <div className="my-4 text-lg">
         <Anchorme target="_blank" className="text-error">
-          Malaysia's Syazrul Idrus produced the best bowling figures in Men's
-          T20I history 🙌 More ➡️ https://www.icc-cricket.com/news/3603747
+          {/* Malaysia's Syazrul Idrus produced the best bowling figures in Men's
+          T20I history 🙌 More ➡️ https://www.icc-cricket.com/news/3603747 */}
+          {props.postText}
         </Anchorme>
       </div>
-      <div>
-        <img src={TestPostImg} alt="" />
-      </div>
+      {props.postImg && (
+        <div>
+          <img src={props.postImg} alt="" />
+        </div>
+      )}
       <div className="text-md mt-2 flex gap-2 items-center">
         <BiSolidLike />
-        <p>201 likes</p>
+        <p>{props.likes} likes</p>
       </div>
       <div className="divider my-0 py-0"></div>
       <div className="flex mt-2">
