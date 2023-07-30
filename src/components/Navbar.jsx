@@ -1,15 +1,27 @@
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import React from "react";
-import { Link, redirect, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { auth } from "../firebase-config";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate()
-  const removeAuthUid = () => {
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("user is logged in")
+    } else { 
+      console.log("no user logged in")
+    }
+  });
+
+  const onLogout = async () => {
+    await signOut(auth)
     localStorage.removeItem("uid")
     navigate("/login")
-}
+  }
   return (
-    <nav className="navbar bg-base-100 py-3 shadow-lg fixed">
+    <nav className="navbar bg-base-100 py-3 shadow-lg fixed z-10">
       <div className="container mx-auto flex justify-between">
         <div>
           <Link to="/browse" className="btn btn-ghost normal-case text-2xl">
@@ -28,7 +40,7 @@ const Navbar = () => {
             </Link>
           )}
           {location.pathname == "/browse" && (
-            <button onClick={removeAuthUid} className="btn btn-neutral">
+            <button onClick={onLogout} className="btn btn-neutral">
               Logout
             </button>
           )}

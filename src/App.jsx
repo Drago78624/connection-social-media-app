@@ -1,13 +1,13 @@
 import React, { Suspense, lazy } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import RootLayout from "./pages/RootLayout";
-import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Error from "./pages/Error";
 import AuthContextProvider from "./contexts/AuthContextProvider";
 import { checkAuthLoader } from "./auth";
 
 const Browse = lazy(() => import("./pages/Browse"));
+const Login = lazy(() => import("./pages/Login"));
 
 const router = createBrowserRouter([
   {
@@ -16,11 +16,15 @@ const router = createBrowserRouter([
     errorElement: <Error />,
     children: [
       { index: true, element: <SignUp /> },
-      { path: "login", element: <Login /> },
+      { path: "login", element: (
+        <Suspense fallback={"loading..."}>
+          <Login />
+        </Suspense>
+      ),},
       {
         path: "browse",
         element: (
-          <Suspense fallback={"loadin..."}>
+          <Suspense fallback={"loading..."}>
             <Browse />
           </Suspense>
         ),

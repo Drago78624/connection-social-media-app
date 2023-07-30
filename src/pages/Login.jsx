@@ -29,7 +29,9 @@ const Login = () => {
   const onLogin = async (data) => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      const res = await signInWithEmailAndPassword(auth, data.email, data.password);
+      localStorage.setItem("uid", JSON.stringify(res.user.uid))
+      navigate("/browse")
     } catch (err) {
       const errorCode = err.code;
       if (errorCode === "auth/wrong-password") {

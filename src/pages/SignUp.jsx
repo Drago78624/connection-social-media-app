@@ -8,12 +8,14 @@ import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { addDoc, collection, where, query, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [userExists, setUserExists] = useState(false);
   const [usernameTaken, setUsernameTaken] = useState(false);
   const userdataCollectionRef = collection(db, "userdata");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const formSchema = yup.object().shape({
     username: yup.string().required("Please enter a username"),
@@ -47,15 +49,24 @@ const SignUp = () => {
           data.email,
           data.password
         );
-        // userdata saving
-        const imageRef = ref(storage, `profiles/${data.image[0].name + v4()}`);
-        await uploadBytes(imageRef, data.image[0]);
-        const url = await getDownloadURL(imageRef);
+        let url = "";
+        console.log(data.image)
+        if (data.image.length > 0) {
+          // userdata saving
+          const imageRef = ref(
+            storage,
+            `profiles/${data.image[0].name + v4()}`
+          );
+          await uploadBytes(imageRef, data.image[0]);
+          url = await getDownloadURL(imageRef);
+        }
         await addDoc(userdataCollectionRef, {
           id: res.user.uid,
           username: data.username,
           profUrl: url,
         });
+        localStorage.setItem("uid", JSON.stringify(res.user.uid));
+        navigate("/browse");
       } else {
         setUsernameTaken(true);
         setTimeout(() => {
@@ -90,6 +101,8 @@ const SignUp = () => {
       } else {
         return;
       }
+      localStorage.setItem("uid", JSON.stringify(res.user.uid));
+      navigate("/browse");
     } catch (err) {
       console.log(err);
     }
