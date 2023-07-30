@@ -4,7 +4,7 @@ import RootLayout from "./pages/RootLayout";
 import SignUp from "./pages/SignUp";
 import Error from "./pages/Error";
 import AuthContextProvider from "./contexts/AuthContextProvider";
-import { checkAuthLoader } from "./auth";
+import { checkAuthLoader, checkAuthLoaderForAuthenticated } from "./auth";
 
 const Browse = lazy(() => import("./pages/Browse"));
 const Login = lazy(() => import("./pages/Login"));
@@ -15,12 +15,13 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <Error />,
     children: [
-      { index: true, element: <SignUp /> },
+      { index: true, element: <SignUp />, loader: checkAuthLoaderForAuthenticated },
       { path: "login", element: (
         <Suspense fallback={"loading..."}>
           <Login />
         </Suspense>
-      ),},
+      ),
+    loader: checkAuthLoaderForAuthenticated},
       {
         path: "browse",
         element: (
