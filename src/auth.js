@@ -1,7 +1,7 @@
 import { redirect } from "react-router-dom";
 
 export const getAuthUid = () => {
-    const uid = localStorage.getItem("uid")
+    const uid = JSON.parse(localStorage.getItem("uid"))
     return uid
 }
 

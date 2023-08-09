@@ -25,9 +25,27 @@ const Browse = () => {
         console.log("Document does not exist");
       }
     };
+    const getPostUserData = async (uid) => {
+      const q = query(userdataCollectionRef, where("id", "==", uid));
+      const docRef = await getDocs(q);
+      if (docRef.docs.length > 0) {
+        const doc = docRef.docs[0];
+        const data = doc.data();
+        return data;
+      } else {
+        console.log("Document does not exist");
+      }
+    };
     const getPostsData = async () => {
       const querySnapshot = await getDocs(collection(db, "posts"));
-      const posts = querySnapshot.docs.map((doc) => doc.data());
+      const posts = querySnapshot.docs.map((doc) => {
+        const postData = doc.data();
+        const userData = getPostUserData(postData.uid);
+        return {
+          ...postData,
+          ...userData
+        };
+      });
       setPosts(posts);
     };
     getPostsData();
@@ -42,17 +60,20 @@ const Browse = () => {
       <CreatePost profUrl={userInfo?.profUrl} username={userInfo?.username} />
       {posts &&
         posts.map((post) => {
-          const timeInMiliseconds = post.created_at.seconds * 1000
+          const timeInMiliseconds = post?.created_at?.seconds * 1000;
           const timeAgo = moment(timeInMiliseconds).fromNow();
           return (
             <Post
               marginBottom={6}
               shadow="shadow-lg"
               padding={4}
-              postText={post.post_text}
-              postImg={post.post_image}
-              likes={post.likes}
+              postText={post?.post_text}
+              postImg={post?.post_image}
+              likes={post?.likes}
               timestamp={timeAgo}
+              username={post?.username}
+              profImg={post?.profUrl}
+              uid={post?.id}
             />
           );
         })}

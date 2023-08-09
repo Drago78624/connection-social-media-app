@@ -99,10 +99,9 @@ const SignUp = () => {
           profUrl: res.user.photoURL,
         });
       } else {
-        return;
+        localStorage.setItem("uid", JSON.stringify(res.user.uid));
+        navigate("/browse");
       }
-      localStorage.setItem("uid", JSON.stringify(res.user.uid));
-      navigate("/browse");
     } catch (err) {
       console.log(err);
     }

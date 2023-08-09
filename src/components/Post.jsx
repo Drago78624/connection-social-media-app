@@ -3,9 +3,11 @@ import TestProfImg from "../assets/sasuke github.jpeg";
 import { AiFillDelete } from "react-icons/ai";
 import { BiComment, BiSolidLike } from "react-icons/bi";
 import { Anchorme } from "react-anchorme";
+import { getAuthUid } from "../auth";
 
 const Post = (props) => {
-  
+  const uid = getAuthUid();
+
   return (
     <div
       className={`bg-base-200 p-${props.padding} mb-${props.marginBottom} rounded-lg ${props.shadow} sm:w-[450px] md:w-[600px] lg:w-[800px] mx-auto`}
@@ -14,17 +16,19 @@ const Post = (props) => {
         <div className="flex gap-4 items-center">
           <div className="avatar">
             <div className="w-14 mask mask-hexagon">
-              <img src={TestProfImg} />
+              <img src={props.profImg} />
             </div>
           </div>
           <div>
-            <h2 className="text-lg font-bold">Muhammad Maaz Ahmed</h2>
+            <h2 className="text-lg font-bold">{props.username}</h2>
             <p>{props.timestamp}</p>
           </div>
         </div>
-        <div>
-          <AiFillDelete fontSize="24px" />
-        </div>
+        {props.uid === uid && (
+          <div>
+            <AiFillDelete fontSize="24px" />
+          </div>
+        )}
       </div>
       <div className="my-4 text-lg">
         <Anchorme target="_blank" className="text-error">
