@@ -3,7 +3,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import RootLayout from "./pages/RootLayout";
 import SignUp from "./pages/SignUp";
 import Error from "./pages/Error";
-import AuthContextProvider from "./contexts/AuthContextProvider";
+import UserContextProvider from "./contexts/UserContextProvider";
 import { checkAuthLoader, checkAuthLoaderForAuthenticated } from "./auth";
 
 const Browse = lazy(() => import("./pages/Browse"));
@@ -37,9 +37,9 @@ const router = createBrowserRouter([
 
 const App = () => {
   return (
-    <AuthContextProvider>
+    <UserContextProvider>
       <RouterProvider router={router} />
-    </AuthContextProvider>
+    </UserContextProvider>
   );
 };
 

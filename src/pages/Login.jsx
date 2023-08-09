@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -6,12 +6,15 @@ import { useState } from "react";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleAuthProvider } from "../firebase-config";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../contexts/UserContextProvider";
+import getUserData from "../utils/getUserData";
 
 const Login = () => {
   const [wrongPass, setWrongPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userNotFound, setUserNotFound] = useState(false);
   const navigate = useNavigate()
+  const userCtx = useContext(UserContext)
 
   const formSchema = yup.object().shape({
     email: yup.string().email().required("Please enter an email"),
@@ -30,7 +33,9 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await signInWithEmailAndPassword(auth, data.email, data.password);
-      localStorage.setItem("uid", JSON.stringify(res.user.uid))
+      const userData = await getUserData(res.user.uid)
+      userCtx.setUserData(userData);
+      localStorage.setItem("uid", JSON.stringify(userData.id))
       navigate("/browse")
     } catch (err) {
       const errorCode = err.code;
@@ -56,6 +61,12 @@ const Login = () => {
   const onLogInWithGoogle = async () => {
     try {
       const res = await signInWithPopup(auth, googleAuthProvider);
+      const userData = {
+        id: res.user.uid,
+        username: res.user.displayName,
+        profUrl: res.user.photoURL,
+      };
+      userCtx.setUserData(userData);
       localStorage.setItem("uid", JSON.stringify(res.user.uid))
       navigate("/browse")
     } catch (err) {

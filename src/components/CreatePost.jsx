@@ -1,16 +1,22 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db, storage } from "../firebase-config";
 import { v4 } from "uuid";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { getAuthUid } from "../auth";
+import { UserContext } from "../contexts/UserContextProvider";
+import { getPostsData } from "../pages/Browse";
 
 const CreatePost = (props) => {
   const postsCollectionRef = collection(db, "posts");
-  const uid = getAuthUid()
+  const userCtx = useContext(UserContext);
+  const [loading, setLoading] = useState(false)
 
   const formSchema = yup.object().shape({
     postText: yup.string().required("Please enter some text"),
@@ -20,32 +26,41 @@ const CreatePost = (props) => {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: yupResolver(formSchema),
   });
 
+  const fetchingPosts = async () => {
+    const fetchedPosts = await getPostsData();
+    props.setPosts(fetchedPosts);
+  };
+
   const onCreatePost = async (data) => {
-    console.log(data);
+    setLoading(true)
     try {
       let url = "";
       if (data.image.length > 0) {
-        const imageRef = ref(
-          storage,
-          `posts/${data.image[0].name + v4()}`
-        );
+        const imageRef = ref(storage, `posts/${data.image[0].name + v4()}`);
         await uploadBytes(imageRef, data.image[0]);
         url = await getDownloadURL(imageRef);
       }
       const res = await addDoc(postsCollectionRef, {
         post_text: data.postText,
         post_image: url,
-        uid: uid,
+        uid: userCtx.userData.id,
         created_at: serverTimestamp(),
         likes: 0,
-        comments: []
-      })
-      console.log("post added", res)
+        comments: [],
+        username: userCtx.userData.username,
+        profUrl: userCtx.userData.profUrl,
+      });
+      console.log("post added", res);
+      setLoading(false)
+      fetchingPosts();
+      reset();
     } catch (err) {
+      setLoading(false)
       console.log(err);
     }
   };
@@ -82,8 +97,8 @@ const CreatePost = (props) => {
         </div>
       </div>
       <div className="divider"></div>
-      <div className="flex">
-        <div className="form-control w-full">
+      <div className="flex justify-between">
+        <div className="form-control">
           <input
             type="file"
             className="file-input file-input-bordered w-full max-w-xs"
@@ -91,7 +106,14 @@ const CreatePost = (props) => {
           />
         </div>
         <div>
-          <button className="btn btn-secondary">Post</button>
+          {loading ? (
+            <button className="btn btn-secondary">
+              <span className="loading loading-spinner"></span>
+              Posting
+            </button>
+          ) : (
+            <button className="btn btn-secondary">Post</button>
+          )}
         </div>
       </div>
     </form>

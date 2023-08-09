@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -9,6 +9,7 @@ import { addDoc, collection, where, query, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../contexts/UserContextProvider";
 
 const SignUp = () => {
   const [userExists, setUserExists] = useState(false);
@@ -16,6 +17,7 @@ const SignUp = () => {
   const userdataCollectionRef = collection(db, "userdata");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const userCtx = useContext(UserContext);
 
   const formSchema = yup.object().shape({
     username: yup.string().required("Please enter a username"),
@@ -50,7 +52,7 @@ const SignUp = () => {
           data.password
         );
         let url = "";
-        console.log(data.image)
+        console.log(data.image);
         if (data.image.length > 0) {
           // userdata saving
           const imageRef = ref(
@@ -60,12 +62,14 @@ const SignUp = () => {
           await uploadBytes(imageRef, data.image[0]);
           url = await getDownloadURL(imageRef);
         }
-        await addDoc(userdataCollectionRef, {
+        const userData = {
           id: res.user.uid,
           username: data.username,
           profUrl: url,
-        });
-        localStorage.setItem("uid", JSON.stringify(res.user.uid));
+        };
+        await addDoc(userdataCollectionRef, userData);
+        userCtx.setUserData(userData);
+        localStorage.setItem("uid", JSON.stringify(userData.id));
         navigate("/browse");
       } else {
         setUsernameTaken(true);
@@ -92,14 +96,19 @@ const SignUp = () => {
       const res = await signInWithPopup(auth, googleAuthProvider);
       const q = query(userdataCollectionRef, where("id", "==", res.user.uid));
       const querySnapshot = await getDocs(q);
+      const userData = {
+        id: res.user.uid,
+        username: res.user.displayName,
+        profUrl: res.user.photoURL,
+      };
       if (querySnapshot.empty) {
-        await addDoc(userdataCollectionRef, {
-          id: res.user.uid,
-          username: res.user.displayName,
-          profUrl: res.user.photoURL,
-        });
+        await addDoc(userdataCollectionRef, userData);
+        userCtx.setUserData(userData);
+        localStorage.setItem("uid", JSON.stringify(userData.id));
+        navigate("/browse");
       } else {
-        localStorage.setItem("uid", JSON.stringify(res.user.uid));
+        userCtx.setUserData(userData);
+        localStorage.setItem("uid", JSON.stringify(userData.id));
         navigate("/browse");
       }
     } catch (err) {
