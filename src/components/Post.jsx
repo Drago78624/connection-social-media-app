@@ -25,9 +25,9 @@ const Post = (props) => {
           </div>
         </div>
         {props.uid === uid && (
-          <div>
+          <button className="btn" onClick={() => props.onDeletePost(props.id)}>
             <AiFillDelete fontSize="24px" />
-          </div>
+          </button>
         )}
       </div>
       <div className="my-4 text-lg">
