@@ -1,5 +1,4 @@
 import React from "react";
-import TestProfImg from "../assets/sasuke github.jpeg";
 import { AiFillDelete } from "react-icons/ai";
 import { BiComment, BiSolidLike } from "react-icons/bi";
 import { Anchorme } from "react-anchorme";
@@ -25,9 +24,13 @@ const Post = (props) => {
           </div>
         </div>
         {props.uid === uid && (
-          <button className="btn" onClick={() => props.onDeletePost(props.id)}>
-            <AiFillDelete fontSize="24px" />
-          </button>
+            <button
+              className="btn"
+              onClick={() => props.onDeletePost(props.id)}
+              disabled={props.loading}
+            >
+              {props.loading ? <span className="loading loading-spinner"></span> : <AiFillDelete fontSize="24px" />}
+            </button>
         )}
       </div>
       <div className="my-4 text-lg">

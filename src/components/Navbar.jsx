@@ -1,26 +1,37 @@
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebase-config";
+import Alert from "./Alert";
 
 const Navbar = () => {
+  const [show, setShow] = useState(false)
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      console.log("user is logged in")
-    } else { 
-      console.log("no user logged in")
+      console.log("user is logged in");
+    } else {
+      console.log("no user logged in");
     }
   });
 
   const onLogout = async () => {
-    await signOut(auth)
-    localStorage.removeItem("uid")
-    navigate("/login")
-  }
+    const result = confirm("Do you want to proceed?");
+    if (result) {
+      await signOut(auth);
+      localStorage.removeItem("uid");
+      navigate("/login");
+      setShow(true)
+      setTimeout(() => {
+        setShow(false);
+      }, 3000);
+    }
+  };
   return (
+    <>
+    {show && <Alert text="You've been logged out successfully!" />}
     <nav className="navbar bg-base-100 py-3 shadow-lg fixed z-10">
       <div className="container mx-auto flex justify-between">
         <div>
@@ -47,6 +58,7 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
+    </>
   );
 };
 
