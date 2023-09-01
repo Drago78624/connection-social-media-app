@@ -3,13 +3,15 @@ import Post from "../components/Post";
 import { createPortal } from "react-dom";
 import Modal from "../components/Modal";
 import CreatePost from "../components/CreatePost";
-import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "../firebase-config";
 import moment from "moment";
 import { UserContext } from "../contexts/UserContextProvider";
 
 export const getPostsData = async () => {
-  const querySnapshot = await getDocs(collection(db, "posts"));
+  const postsCollectionRef = collection(db, "posts")
+  const q = query(postsCollectionRef, orderBy("created_at", "desc"));
+  const querySnapshot = await getDocs(q);
   const posts = querySnapshot.docs.map((doc) => {
     const postData = { ...doc.data(), id: doc.id };
     return postData;
