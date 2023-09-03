@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { AiFillDelete } from "react-icons/ai";
 import { BiComment, BiSolidLike } from "react-icons/bi";
 import { Anchorme } from "react-anchorme";
@@ -6,6 +6,7 @@ import { getAuthUid } from "../auth";
 
 const Post = (props) => {
   const uid = getAuthUid();
+  const [deletingPostId, setDeletingPostId] = useState(null)
 
   return (
     <div
@@ -24,13 +25,20 @@ const Post = (props) => {
           </div>
         </div>
         {props.uid === uid && (
-            <button
-              className="btn"
-              onClick={() => props.onDeletePost(props.id)}
-              disabled={props.loading}
-            >
-              {props.loading ? <span className="loading loading-spinner"></span> : <AiFillDelete fontSize="24px" />}
-            </button>
+          <button
+            className="btn"
+            onClick={() => {
+              setDeletingPostId(props.id); // set the id of the post being deleted
+              props.onDeletePost(props.id);
+            }}
+            disabled={deletingPostId === props.id} // disable the button of the post being deleted
+          >
+            {deletingPostId === props.id ? (
+              <span className="loading loading-spinner"></span>
+            ) : (
+              <AiFillDelete fontSize="24px" />
+            )}
+          </button>
         )}
       </div>
       <div className="my-4 text-lg">
